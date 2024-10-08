@@ -8,7 +8,7 @@ import keyring
 
 from email.mime.text import MIMEText
 
-# python3 main.py
+# python3 email_sender.py
 user_map = {
     "sam": "sam@britton.email",
     "katie": "luovakatie@gmail.com"
@@ -46,6 +46,11 @@ def send_message(email, user="sam"):
     smtp_server = "smtp.gmail.com"
     sender_email = "sammie.b.automation@gmail.com"
     password = keyring.get_password("gmail automation", "sammie.b.automation@gmail.com")
+
+    if password is None:
+        print("Please enter the password for the email address in the keyring")
+        password = input("Password: ")
+        keyring.set_password("gmail automation", "sammie.b.automation@gmail.com", password)
 
     text_subtype = 'plain'
 
