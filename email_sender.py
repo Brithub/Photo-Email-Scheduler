@@ -45,12 +45,11 @@ def send_message(email, user="sam"):
     port = 587  # For starttls
     smtp_server = "smtp.gmail.com"
     sender_email = "sammie.b.automation@gmail.com"
+
     password = keyring.get_password("gmail automation", "sammie.b.automation@gmail.com")
 
     if password is None:
-        print("Please enter the password for the email address in the keyring")
-        password = input("Password: ")
-        keyring.set_password("gmail automation", "sammie.b.automation@gmail.com", password)
+        password = os.getenv("GMAIL_AUTOMATION_PASSWORD")
 
     text_subtype = 'plain'
 
