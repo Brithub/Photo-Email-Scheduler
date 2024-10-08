@@ -1,9 +1,9 @@
 [packages]
 fastapi = "*"
 python-daemon = "*"
-#playsound = "*"
-
-[dev-packages]
+keyring = "*"
+pyyaml = "*"
+"fastapi[standard]" = "*"
 
 [requires]
 python_version = "3.12"

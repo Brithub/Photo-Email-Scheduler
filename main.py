@@ -4,8 +4,9 @@ import random
 import smtplib, ssl
 import time
 import yaml
-from email.mime.text import MIMEText
+import keyring
 
+from email.mime.text import MIMEText
 
 # python3 main.py
 user_map = {
@@ -14,16 +15,42 @@ user_map = {
 }
 
 
+def get_or_init_messages():
+    if not os.path.exists("messages.yml"):
+        messages = {
+            "subject": [
+                "Subject 1",
+                "Subject 2",
+                "Subject 3"
+            ],
+            "content": [
+                "Content 1",
+                "Content 2",
+                "Content 3"
+            ],
+            "response": [
+                "Response 1",
+                "Response 2",
+                "Response 3"
+            ]
+        }
+        with open("messages.yml", "w") as f:
+            yaml.dump(messages, f)
+    else:
+        messages = yaml.safe_load(open("messages.yml"))
+    return messages
+
+
 def send_message(email, user="sam"):
     port = 587  # For starttls
     smtp_server = "smtp.gmail.com"
     sender_email = "sammie.b.automation@gmail.com"
-
+    password = keyring.get_password("gmail automation", "sammie.b.automation@gmail.com")
 
     text_subtype = 'plain'
 
     # select a random message from messages.yml
-    all_messages = yaml.safe_load(open("messages.yml"))
+    all_messages = get_or_init_messages()
     subject = random.choice(all_messages.get("subject"))
     content = random.choice(all_messages.get("content"))
 
