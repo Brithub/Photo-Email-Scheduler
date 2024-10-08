@@ -1,0 +1,117 @@
+import datetime
+import os
+import random
+import smtplib, ssl
+import time
+import yaml
+from email.mime.text import MIMEText
+
+
+# python3 main.py
+user_map = {
+    "sam": "sam@britton.email",
+    "katie": "luovakatie@gmail.com"
+}
+
+
+def send_message(email, user="sam"):
+    port = 587  # For starttls
+    smtp_server = "smtp.gmail.com"
+    sender_email = "sammie.b.automation@gmail.com"
+
+
+    text_subtype = 'plain'
+
+    # select a random message from messages.yml
+    all_messages = yaml.safe_load(open("messages.yml"))
+    subject = random.choice(all_messages.get("subject"))
+    content = random.choice(all_messages.get("content"))
+
+    msg = MIMEText(content, text_subtype)
+    msg['Subject'] = subject
+    msg['From'] = sender_email
+
+    print("emailing " + email)
+    context = ssl.create_default_context()
+    with smtplib.SMTP(smtp_server, port) as server:
+        server.ehlo()
+        server.starttls(context=context)
+        server.login(sender_email, password)
+        server.sendmail(sender_email, email, msg.as_string())
+        print("email sent")
+
+
+def pick_time():
+    # pick the day of the week
+    day_of_week = datetime.datetime.today().weekday()
+
+    # get the start and end possible times
+    if day_of_week < 5:
+        # weekdays
+
+        # 10% chance of having a 9am starting time
+        if random.random() > 0.9:
+            start_time = datetime.time(9, 0)
+        else:
+            start_time = datetime.time(17, 0)
+        end_time = datetime.time(17, 0)
+    else:
+        # weekends
+        start_time = datetime.time(10, 0)
+        end_time = datetime.time(20, 0)
+
+    # pick a random time between start and end
+    alert_time = datetime.time(
+        hour=random.randint(start_time.hour, end_time.hour),
+        minute=random.randint(0, 59)
+    )
+    return alert_time
+
+
+def schedule_message():
+    while True:
+        year = datetime.datetime.now().year
+        month = datetime.datetime.now().month
+        day = datetime.datetime.now().day
+        current_path = os.path.abspath(os.path.dirname(__file__))
+        for user in user_map.keys():
+            # if there's no scheduled message for today for the user, decide that schedule
+            if not os.path.exists(f"{current_path}/schedules/{user}/{year}/{month}/{day}"):
+                alert_time = pick_time()
+                alert_time_string = alert_time.strftime("%H:%M")
+
+                # make the schedules directory if it doesn't exist
+                os.makedirs(f"{current_path}/schedules/{user}/{year}/{month}/{day}", exist_ok=True)
+
+                # write the scheduled message to the file
+                with open(f"{current_path}/schedules/{user}/{year}/{month}/{day}/{alert_time_string}", "w") as f:
+                    f.write("")
+            else:
+                # list the files in the schedules dir under the user and today's date
+                files = os.listdir(f"{current_path}/schedules/{user}/{year}/{month}/{day}")
+                # get the alert time from the file path
+                timestamp = str(files[0]).split("/")[-1]
+                alert_time = datetime.datetime.strptime(timestamp, "%H:%M").time()
+
+            # now if we're at or past the time to send the message, send it with a decreasing delay
+            if datetime.datetime.now().time() >= alert_time:
+                # check if the message has already been sent
+                if os.path.exists(f"{current_path}/markers/{user}/{year}/{month}/{day}"):
+                    continue
+
+                # send the message
+                send_message(user_map[user], user)
+
+        # sleep for 5 minutes
+        time.sleep(60 * 5)
+
+
+# main function
+def main():
+    print("Starting message scheduler")
+    # with daemon.DaemonContext(pidfile=lockfile.FileLock('/var/run/message.pid')):
+    schedule_message()
+
+
+if __name__ == "__main__":
+    main()
