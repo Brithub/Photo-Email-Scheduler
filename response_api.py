@@ -18,6 +18,10 @@ def photo_taken(user):
     today_date = f"{now.year}/{now.month}/{now.day}"
     write_path = f"{current_path}/markers/{user}/{today_date}"
 
+    # check if the path exists, if it does, we're going to prompt the user to add a new message as they have already taken a photo today
+    if os.path.exists(write_path):
+        return "You are already real. Add a new message!"
+
     print("making this path", write_path)
     # make the markers directories if they don't exist
     os.makedirs(write_path, exist_ok=True)
