@@ -20,7 +20,9 @@ def photo_taken(user):
 
     # check if the path exists, if it does, we're going to prompt the user to add a new message as they have already taken a photo today
     if os.path.exists(write_path):
-        return "You are already real. Add a new message!"
+        new_message_type = random.choice(['response', 'subject', 'content'])
+        return (f"You are already real. "
+                f"Come up with a new message to use as a {new_message_type}!🇰🇷{new_message_type}")
 
     print("making this path", write_path)
     # make the markers directories if they don't exist
