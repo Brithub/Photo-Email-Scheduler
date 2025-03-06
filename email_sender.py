@@ -85,11 +85,11 @@ def pick_time():
             start_time = datetime.time(9, 0)
         else:
             start_time = datetime.time(17, 0)
-        end_time = datetime.time(17, 0)
+        end_time = datetime.time(22, 0)
     else:
         # weekends
         start_time = datetime.time(10, 0)
-        end_time = datetime.time(20, 0)
+        end_time = datetime.time(22, 0)
 
     # pick a random time between start and end
     alert_time = datetime.time(
