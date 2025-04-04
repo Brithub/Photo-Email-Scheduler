@@ -8,12 +8,15 @@ import keyring
 
 from email.mime.text import MIMEText
 
+from time_helper import user_timezone, now
+
 # python3 email_sender.py
 user_map = {
     "sam": "sam@britton.email",
     "katie": "luovakatie@gmail.com"
 }
 
+current_path = os.path.dirname(os.path.realpath(__file__))
 
 def get_or_init_messages():
     if not os.path.exists("messages.yml"):
@@ -41,7 +44,7 @@ def get_or_init_messages():
     return messages
 
 
-def send_message(email, user="sam"):
+def send_message(email):
     port = 587  # For starttls
     smtp_server = "smtp.gmail.com"
     sender_email = "sammie.b.automation@gmail.com"
@@ -71,15 +74,14 @@ def send_message(email, user="sam"):
         server.sendmail(sender_email, email, msg.as_string())
         print("email sent")
 
-
-def pick_time():
-    # pick the day of the week
-    day_of_week = datetime.datetime.today().weekday()
+def pick_time(user="sam"):
+    tz = user_timezone(user)
+    # Get current time with the specified timezone
+    day_of_week = now(user).weekday()
 
     # get the start and end possible times
     if day_of_week < 5:
         # weekdays
-
         # 10% chance of having a 9am starting time
         if random.random() > 0.9:
             start_time = datetime.time(9, 0)
@@ -94,21 +96,23 @@ def pick_time():
     # pick a random time between start and end
     alert_time = datetime.time(
         hour=random.randint(start_time.hour, end_time.hour),
-        minute=random.randint(0, 59)
+        minute=random.randint(0, 59),
+        second=0,
+        microsecond=0,
+        tzinfo = tz
     )
     return alert_time
 
 
 def schedule_message():
     while True:
-        year = datetime.datetime.now().year
-        month = datetime.datetime.now().month
-        day = datetime.datetime.now().day
-        current_path = os.path.abspath(os.path.dirname(__file__))
         for user in user_map.keys():
+            year = now(user).year
+            month = now(user).month
+            day = now(user).day
             # if there's no scheduled message for today for the user, decide that schedule
             if not os.path.exists(f"{current_path}/schedules/{user}/{year}/{month}/{day}"):
-                alert_time = pick_time()
+                alert_time = pick_time(user)
                 alert_time_string = alert_time.strftime("%H:%M")
 
                 # make the schedules directory if it doesn't exist
@@ -125,7 +129,7 @@ def schedule_message():
                 alert_time = datetime.datetime.strptime(timestamp, "%H:%M").time()
 
             # now if we're at or past the time to send the message, send it with a decreasing delay
-            if datetime.datetime.now().time() >= alert_time:
+            if now(user).time() >= alert_time:
                 # check if the message has already been sent
                 if os.path.exists(f"{current_path}/markers/{user}/{year}/{month}/{day}"):
                     continue
