@@ -65,8 +65,6 @@ async def add_text(message_type: str, request: Request):
     if message_type not in messages:
         messages[message_type] = [message_text]
     else:
-        # BUG FIX: The original code used messages.get() which doesn't modify the dictionary
-        # Instead, we access and modify the list directly
         messages[message_type].append(message_text)
 
     # write the new messages to the file
