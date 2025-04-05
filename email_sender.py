@@ -123,9 +123,10 @@ def schedule_message():
                     f.write(alert_time.isoformat())
             else:
                 # list the files in the schedules dir under the user and today's date
-                files = os.listdir(f"{current_path}/schedules/{user}/{year}/{month}/{day}")
+                date_dir = f"{current_path}/schedules/{user}/{year}/{month}/{day}"
+                files = os.listdir(date_dir)
                 # get the alert time from the file path
-                timestamp_file = open(files[0]).read()
+                timestamp_file = open(date_dir + "/" +files[0]).read()
                 alert_time = datetime.datetime.fromisoformat(timestamp_file)
 
             # now if we're at or past the time to send the message, send it with a decreasing delay
