@@ -103,7 +103,8 @@ def pick_time(user="sam"):
         hour=random.randint(start_time.hour, end_time.hour),
         minute=random.randint(0, 59),
         second=0,
-        microsecond=0
+        microsecond=0,
+        tzinfo=user_timezone(user)
     )
     return alert_timestamp
 
