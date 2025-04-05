@@ -78,7 +78,8 @@ def send_message(email):
 
 def pick_time(user="sam"):
     # Get current time with the specified timezone
-    day_of_week = now(user).weekday()
+    now_user = now(user)
+    day_of_week = now_user.weekday()
 
     # get the start and end possible times
     if day_of_week < 5:
@@ -95,13 +96,16 @@ def pick_time(user="sam"):
         end_time = datetime.time(22, 0)
 
     # pick a random time between start and end
-    alert_time = datetime.time(
+    alert_timestamp = datetime.datetime(
+        day=now_user.day,
+        month=now_user.month,
+        year=now_user.year,
         hour=random.randint(start_time.hour, end_time.hour),
         minute=random.randint(0, 59),
         second=0,
         microsecond=0
     )
-    return alert_time
+    return alert_timestamp
 
 
 def schedule_message():
