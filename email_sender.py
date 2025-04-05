@@ -141,7 +141,7 @@ def schedule_message():
                     continue
 
                 # send the message
-                send_message(user_map[user], user)
+                send_message(user_map[user])
 
         # sleep for 5 minutes
         time.sleep(60 * 5)
