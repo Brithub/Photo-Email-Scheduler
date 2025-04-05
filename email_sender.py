@@ -18,6 +18,7 @@ user_map = {
 
 current_path = os.path.dirname(os.path.realpath(__file__))
 
+
 def get_or_init_messages():
     if not os.path.exists("messages.yml"):
         messages = {
@@ -74,8 +75,8 @@ def send_message(email):
         server.sendmail(sender_email, email, msg.as_string())
         print("email sent")
 
+
 def pick_time(user="sam"):
-    tz = user_timezone(user)
     # Get current time with the specified timezone
     day_of_week = now(user).weekday()
 
@@ -98,8 +99,7 @@ def pick_time(user="sam"):
         hour=random.randint(start_time.hour, end_time.hour),
         minute=random.randint(0, 59),
         second=0,
-        microsecond=0,
-        tzinfo = tz
+        microsecond=0
     )
     return alert_time
 
