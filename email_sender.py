@@ -135,8 +135,6 @@ def schedule_message():
                 alert_time = datetime.datetime.fromisoformat(timestamp_file)
 
             # now if we're at or past the time to send the message, send it with a decreasing delay
-            print("timezone for alert_time:" + str(alert_time.tzinfo))
-
             if now(user) >= alert_time:
                 # check if the message has already been sent
                 if os.path.exists(f"{current_path}/markers/{user}/{year}/{month}/{day}"):
