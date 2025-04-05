@@ -135,8 +135,7 @@ def schedule_message():
                 alert_time = datetime.datetime.fromisoformat(timestamp_file)
 
             # now if we're at or past the time to send the message, send it with a decreasing delay
-            now_for_user = now(user)
-            print("timezone for user_now:" + str(now_for_user.tzinfo))
+            print("timezone for alert_time:" + str(alert_time.tzinfo))
 
             if now(user) >= alert_time:
                 # check if the message has already been sent
