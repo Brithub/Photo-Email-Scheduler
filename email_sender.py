@@ -120,17 +120,16 @@ def schedule_message():
 
                 # write the scheduled message to the file
                 with open(f"{current_path}/schedules/{user}/{year}/{month}/{day}/{alert_time_string}", "w") as f:
-                    f.write("")
+                    f.write(alert_time.isoformat())
             else:
                 # list the files in the schedules dir under the user and today's date
                 files = os.listdir(f"{current_path}/schedules/{user}/{year}/{month}/{day}")
                 # get the alert time from the file path
-                timestamp = str(files[0]).split("/")[-1]
-                alert_time = datetime.datetime.strptime(timestamp, "%H:%M")
-                alert_time = alert_time.replace(tzinfo=user_timezone(user))
+                timestamp_file = open(files[0]).read()
+                alert_time = datetime.datetime.fromisoformat(timestamp_file)
 
             # now if we're at or past the time to send the message, send it with a decreasing delay
-            if now(user).time() >= alert_time.time():
+            if now(user) >= alert_time:
                 # check if the message has already been sent
                 if os.path.exists(f"{current_path}/markers/{user}/{year}/{month}/{day}"):
                     continue
