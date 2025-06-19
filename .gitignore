@@ -1,1 +1,3 @@
 *.idea
+schedules/*
+/messages.yml
