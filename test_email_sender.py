@@ -45,15 +45,13 @@ class TestEmailSender(unittest.TestCase):
         self.assertEqual(result["content"], ["Test content"])
         self.assertEqual(result["response"], ["Test response"])
 
-    @patch('keyring.get_password')
     @patch('os.getenv')
     @patch('smtplib.SMTP')
     @patch('email_sender.get_or_init_messages')
     @patch('random.choice')
     def test_send_message(self, mock_choice, mock_get_messages,
-                          mock_smtp, mock_getenv, mock_keyring):
+                          mock_smtp, mock_getenv):
         # Test sending an email
-        mock_keyring.return_value = "test_password"
         mock_get_messages.return_value = {
             "subject": ["Test subject"],
             "content": ["Test content"]
@@ -72,15 +70,13 @@ class TestEmailSender(unittest.TestCase):
         )
         mock_server.sendmail.assert_called_once()
 
-    @patch('keyring.get_password')
     @patch('os.getenv')
     @patch('smtplib.SMTP')
     @patch('email_sender.get_or_init_messages')
     @patch('random.choice')
     def test_send_message_fallback_password(self, mock_choice, mock_get_messages,
-                                            mock_smtp, mock_getenv, mock_keyring):
+                                            mock_smtp, mock_getenv):
         # Test password fallback to environment variable
-        mock_keyring.return_value = None
         mock_getenv.return_value = "env_password"
         mock_get_messages.return_value = {
             "subject": ["Test subject"],

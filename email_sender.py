@@ -4,7 +4,6 @@ import random
 import smtplib, ssl
 import time
 import yaml
-import keyring
 
 from email.mime.text import MIMEText
 
