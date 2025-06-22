@@ -124,7 +124,7 @@ def schedule_message():
                 timestamp_file = open(date_dir + "/" + files[0]).read()
                 alert_time = datetime.datetime.fromisoformat(timestamp_file)
 
-            # now if we're at or past the time to send the message, send it with a decreasing delay
+            # now if we're at or past the time to send the message
             if now(user) >= alert_time:
                 # check if the message has already been sent
                 if os.path.exists(
