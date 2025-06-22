@@ -6,15 +6,20 @@ import datetime
 import yaml
 import smtplib
 from email_sender import (
-    get_or_init_messages, send_message, pick_time,
-    schedule_message, main, user_map
+    get_or_init_messages,
+    send_message,
+    pick_time,
+    schedule_message,
+    main,
+    user_map,
 )
+
 
 class TestEmailSender(unittest.TestCase):
 
-    @patch('os.path.exists')
-    @patch('builtins.open', new_callable=mock_open)
-    @patch('yaml.dump')
+    @patch("os.path.exists")
+    @patch("builtins.open", new_callable=mock_open)
+    @patch("yaml.dump")
     def test_get_or_init_messages_no_file(self, mock_yaml_dump, mock_file, mock_exists):
         # Test creating new messages.yml file
         mock_exists.return_value = False
@@ -26,16 +31,18 @@ class TestEmailSender(unittest.TestCase):
         self.assertIn("content", result)
         self.assertIn("response", result)
 
-    @patch('os.path.exists')
-    @patch('yaml.safe_load')
-    @patch('builtins.open', new_callable=mock_open)
-    def test_get_or_init_messages_existing_file(self, mock_file, mock_yaml_load, mock_exists):
+    @patch("os.path.exists")
+    @patch("yaml.safe_load")
+    @patch("builtins.open", new_callable=mock_open)
+    def test_get_or_init_messages_existing_file(
+        self, mock_file, mock_yaml_load, mock_exists
+    ):
         # Test loading existing messages.yml
         mock_exists.return_value = True
         mock_yaml_load.return_value = {
             "subject": ["Test subject"],
             "content": ["Test content"],
-            "response": ["Test response"]
+            "response": ["Test response"],
         }
 
         result = get_or_init_messages()
@@ -45,16 +52,15 @@ class TestEmailSender(unittest.TestCase):
         self.assertEqual(result["content"], ["Test content"])
         self.assertEqual(result["response"], ["Test response"])
 
-    @patch('os.getenv')
-    @patch('smtplib.SMTP')
-    @patch('email_sender.get_or_init_messages')
-    @patch('random.choice')
-    def test_send_message(self, mock_choice, mock_get_messages,
-                          mock_smtp, mock_getenv):
+    @patch("os.getenv")
+    @patch("smtplib.SMTP")
+    @patch("email_sender.get_or_init_messages")
+    @patch("random.choice")
+    def test_send_message(self, mock_choice, mock_get_messages, mock_smtp, mock_getenv):
         # Test sending an email
         mock_get_messages.return_value = {
             "subject": ["Test subject"],
-            "content": ["Test content"]
+            "content": ["Test content"],
         }
         mock_choice.side_effect = ["Test subject", "Test content"]
 
@@ -70,17 +76,18 @@ class TestEmailSender(unittest.TestCase):
         )
         mock_server.sendmail.assert_called_once()
 
-    @patch('os.getenv')
-    @patch('smtplib.SMTP')
-    @patch('email_sender.get_or_init_messages')
-    @patch('random.choice')
-    def test_send_message_fallback_password(self, mock_choice, mock_get_messages,
-                                            mock_smtp, mock_getenv):
+    @patch("os.getenv")
+    @patch("smtplib.SMTP")
+    @patch("email_sender.get_or_init_messages")
+    @patch("random.choice")
+    def test_send_message_fallback_password(
+        self, mock_choice, mock_get_messages, mock_smtp, mock_getenv
+    ):
         # Test password fallback to environment variable
         mock_getenv.return_value = "env_password"
         mock_get_messages.return_value = {
             "subject": ["Test subject"],
-            "content": ["Test content"]
+            "content": ["Test content"],
         }
         mock_choice.side_effect = ["Test subject", "Test content"]
 
@@ -93,11 +100,13 @@ class TestEmailSender(unittest.TestCase):
             "sammie.b.automation@gmail.com", "env_password"
         )
 
-    @patch('email_sender.user_timezone')
-    @patch('email_sender.now')
-    @patch('random.random')
-    @patch('random.randint')
-    def test_pick_time_weekday_early(self, mock_randint, mock_random, mock_now, mock_user_timezone):
+    @patch("email_sender.user_timezone")
+    @patch("email_sender.now")
+    @patch("random.random")
+    @patch("random.randint")
+    def test_pick_time_weekday_early(
+        self, mock_randint, mock_random, mock_now, mock_user_timezone
+    ):
         # Test pick_time on weekday with early start (9am)
         mock_tz = datetime.timezone(datetime.timedelta(hours=-5))
         mock_user_timezone.return_value = mock_tz
@@ -111,11 +120,13 @@ class TestEmailSender(unittest.TestCase):
         self.assertEqual(result.minute, 30)
         self.assertEqual(result.tzinfo, mock_tz)
 
-    @patch('email_sender.user_timezone')
-    @patch('email_sender.now')
-    @patch('random.random')
-    @patch('random.randint')
-    def test_pick_time_weekday_regular(self, mock_randint, mock_random, mock_now, mock_user_timezone):
+    @patch("email_sender.user_timezone")
+    @patch("email_sender.now")
+    @patch("random.random")
+    @patch("random.randint")
+    def test_pick_time_weekday_regular(
+        self, mock_randint, mock_random, mock_now, mock_user_timezone
+    ):
         # Test pick_time on weekday with regular start (5pm)
         mock_tz = datetime.timezone(datetime.timedelta(hours=-5))
         mock_user_timezone.return_value = mock_tz
@@ -129,9 +140,9 @@ class TestEmailSender(unittest.TestCase):
         self.assertEqual(result.minute, 15)
         self.assertEqual(result.tzinfo, mock_tz)
 
-    @patch('email_sender.user_timezone')
-    @patch('email_sender.now')
-    @patch('random.randint')
+    @patch("email_sender.user_timezone")
+    @patch("email_sender.now")
+    @patch("random.randint")
     def test_pick_time_weekend(self, mock_randint, mock_now, mock_user_timezone):
         # Test pick_time on weekend
         mock_tz = datetime.timezone(datetime.timedelta(hours=-5))
@@ -145,21 +156,27 @@ class TestEmailSender(unittest.TestCase):
         self.assertEqual(result.minute, 45)
         self.assertEqual(result.tzinfo, mock_tz)
 
-    @patch('os.path.exists')
-    @patch('os.makedirs')
-    @patch('builtins.open', new_callable=mock_open)
-    @patch('email_sender.now')
-    @patch('email_sender.pick_time')
-    @patch('time.sleep')
-    def test_schedule_message_new_schedule(self, mock_sleep, mock_pick_time,
-                                           mock_now, mock_file, mock_makedirs, mock_exists):
+    @patch("os.path.exists")
+    @patch("os.makedirs")
+    @patch("builtins.open", new_callable=mock_open)
+    @patch("email_sender.now")
+    @patch("email_sender.pick_time")
+    @patch("time.sleep")
+    def test_schedule_message_new_schedule(
+        self,
+        mock_sleep,
+        mock_pick_time,
+        mock_now,
+        mock_file,
+        mock_makedirs,
+        mock_exists,
+    ):
         # Test schedule_message creating a new schedule
         # Set up to break after first iteration
         mock_sleep.side_effect = Exception("Stop loop")
 
         mock_now.return_value = MagicMock(
-            year=2023, month=1, day=1,
-            time=lambda: datetime.time(8, 0)
+            year=2023, month=1, day=1, time=lambda: datetime.time(8, 0)
         )
 
         # First check if schedule exists for each user (no), then break
