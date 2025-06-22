@@ -35,15 +35,10 @@ def send_message(email):
     smtp_server = "smtp.gmail.com"
     sender_email = "sammie.b.automation@gmail.com"
 
-    try:
-        password = keyring.get_password(
-            "gmail automation", "sammie.b.automation@gmail.com"
-        )
-    except Exception:
-        print(
-            "Had some trouble getting the keyring password, falling back on the envvar"
-        )
-        password = os.getenv("GMAIL_AUTOMATION_PASSWORD")
+    password = os.getenv("GMAIL_AUTOMATION_PASSWORD")
+
+    if password is None:
+        raise Exception("Unable to get credentials from envvar")
 
     text_subtype = "plain"
 
