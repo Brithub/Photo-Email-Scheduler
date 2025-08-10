@@ -3,29 +3,45 @@ import os
 import random
 import smtplib, ssl
 import time
+from dataclasses import dataclass
+
 import yaml
 
 from email.mime.text import MIMEText
 
 from time_helper import user_timezone, now
 
-# python3 email_sender.py
 user_map = {"sam": "sam@britton.email", "katie": "luovakatie@gmail.com"}
 
 current_path = os.path.dirname(os.path.realpath(__file__))
 
 
-def get_or_init_messages():
+@dataclass
+class MessagesResponse:
+    subjects: list[str]
+    contents: list[str]
+    responses: list[str]
+
+
+def get_or_init_messages() -> MessagesResponse:
+
+    # initialization route
     if not os.path.exists("messages.yml"):
-        messages = {
-            "subject": ["Subject 1", "Subject 2", "Subject 3"],
-            "content": ["Content 1", "Content 2", "Content 3"],
-            "response": ["Response 1", "Response 2", "Response 3"],
-        }
+        messages = MessagesResponse(
+            subjects=["Subject 1", "Subject 2", "Subject 3"],
+            contents=["Content 1", "Content 2", "Content 3"],
+            responses=["Response 1", "Response 2", "Response 3"],
+        )
         with open("messages.yml", "w") as f:
             yaml.dump(messages, f)
-    else:
-        messages = yaml.safe_load(open("messages.yml"))
+
+    loaded_messages = yaml.safe_load(open("messages.yml"))
+    messages = MessagesResponse(
+        subjects=loaded_messages["subjects"],
+        contents=loaded_messages["contents"],
+        responses=loaded_messages["responses"],
+    )
+
     return messages
 
 
@@ -42,9 +58,11 @@ def send_message(email):
     text_subtype = "plain"
 
     # select a random message from messages.yml
-    all_messages = get_or_init_messages()
-    subject = random.choice(all_messages.get("subject"))
-    content = random.choice(all_messages.get("content"))
+    all_messages: MessagesResponse = get_or_init_messages()
+
+    random.seed(int(now().strftime("%Y%m%d")))
+    subject = random.choice(all_messages.subjects)
+    content = random.choice(all_messages.contents)
 
     msg = MIMEText(content, text_subtype)
     msg["Subject"] = subject
