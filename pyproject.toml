@@ -8,3 +8,8 @@ dependencies = [
     "fastapi[standard]",
     "pyyaml"
 ]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.4.1",
+]
