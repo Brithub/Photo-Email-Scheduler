@@ -1,13 +1,15 @@
-import datetime
 import os
+import random
+
 import yaml
 from fastapi import FastAPI, Request
-import random
+
 from time_helper import now
 
 current_path = os.path.abspath(os.path.dirname(__file__))
 
 app = FastAPI()
+
 
 # to start, run fastapi run response_api.py
 @app.get("/photo_taken/{user}/{timezone}")
@@ -26,12 +28,13 @@ def photo_taken(user, timezone):
     today_date = f"{now(user).year}/{now(user).month}/{now(user).day}"
     write_path = f"{current_path}/markers/{user}/{today_date}"
 
-
     # check if the path exists, if it does, we're going to prompt the user to add a new message as they have already taken a photo today
     if os.path.exists(write_path):
-        new_message_type = random.choice(['response', 'subject', 'content'])
-        return (f"You are already real. "
-                f"Come up with a new message to use as a {new_message_type}!🇰🇷{new_message_type}")
+        new_message_type = random.choice(["response", "subject", "content"])
+        return (
+            f"You are already real. "
+            f"Come up with a new message to use as a {new_message_type}!🇰🇷{new_message_type}"
+        )
 
     print("making this path", write_path)
     # make the markers directories if they don't exist
@@ -44,7 +47,7 @@ def photo_taken(user, timezone):
     # open messages.yaml file
     messages = yaml.safe_load(open(f"{current_path}/messages.yml"))
 
-    responses = messages.get("response", ["That's Great!!! You did it!!"])
+    responses = messages.get("responses", ["That's Great!!! You did it!!"])
 
     # pick one response randomly
     return random.choice(responses)

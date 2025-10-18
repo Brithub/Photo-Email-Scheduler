@@ -160,7 +160,6 @@ def schedule_message():
 # main function
 def main():
     print("Starting message scheduler")
-    # with daemon.DaemonContext(pidfile=lockfile.FileLock('/var/run/message.pid')):
     schedule_message()
 
 
