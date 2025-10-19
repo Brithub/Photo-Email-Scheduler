@@ -24,7 +24,7 @@ class MessagesResponse:
     responses: list[str]
 
 
-def get_or_init_messages(path: str = "messages.yml") -> MessagesResponse:
+def get_or_init_messages(path: str = f"{current_path}/messages.yml") -> MessagesResponse:
 
     # initialization route
     if not os.path.exists(path):
