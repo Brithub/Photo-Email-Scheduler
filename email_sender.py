@@ -24,22 +24,22 @@ class MessagesResponse:
     responses: list[str]
 
 
-def get_or_init_messages(path: str = f"{current_path}/messages.yml") -> MessagesResponse:
+def get_or_init_messages(path: str = current_path) -> MessagesResponse:
 
+    messages_path = path + "/messages.yml"
     # initialization route
-    if not os.path.exists(path):
+    if not os.path.exists(messages_path):
         messages = {
             "subjects": ["Subject 1", "Subject 2", "Subject 3"],
             "contents": ["Content 1", "Content 2", "Content 3"],
             "responses": ["Response 1", "Response 2", "Response 3"],
         }
 
-        output_file = Path(path)
-        output_file.parent.mkdir(exist_ok=True, parents=True)
-        with open(path, "w") as f:
+        Path(messages_path).parent.mkdir(exist_ok=True, parents=True)
+        with open(messages_path, "w") as f:
             yaml.dump(messages, f)
 
-    loaded_messages = yaml.safe_load(open(path))
+    loaded_messages = yaml.safe_load(open(messages_path))
     messages = MessagesResponse(
         subjects=loaded_messages["subjects"],
         contents=loaded_messages["contents"],

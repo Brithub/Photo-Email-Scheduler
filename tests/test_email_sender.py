@@ -12,7 +12,7 @@ from email_sender import (
 
 
 def test_get_or_init_messages():
-    messages_path = f"/tmp/{uuid.uuid4()}/messages.yml"
+    messages_path = f"/tmp/{uuid.uuid4()}"
     messages = get_or_init_messages(messages_path)
 
     assert len(messages.subjects) == 3
@@ -23,7 +23,7 @@ def test_get_or_init_messages():
         "responses": ["Response 1", "Response 2", "Response 3"],
     }
 
-    with open(messages_path, "w") as yaml_file:
+    with open(messages_path + "/messages.yml", "w") as yaml_file:
         yaml.dump(existing_data, yaml_file, default_flow_style=False)
 
     messages = get_or_init_messages(messages_path)

@@ -31,15 +31,12 @@ def photo_taken(user, timezone) -> str:
             f"Come up with a new message to use as a {new_message_type}!🇰🇷{new_message_type}"
         )
 
-    print("making this path", write_path)
     Path(write_path).mkdir(exist_ok=True, parents=True)
-
-    # write to new file even if it doesn't exist
     with open(write_path + "/marker", "w") as f:
         f.write("Photo taken")
 
     # open messages.yaml file
-    messages = get_or_init_messages(f"{meta_directory}/messages.py")
+    messages = get_or_init_messages(meta_directory)
 
     # pick one response randomly
     return random.choice(messages.responses)
@@ -57,7 +54,7 @@ async def add_text(message_type: str, request: Request) -> str:
     current_path = os.path.abspath(os.path.dirname(__file__))
     meta_directory = os.environ.get("META_DIRECTORY", current_path)
 
-    messages = get_or_init_messages(f"{meta_directory}/messages.yml")
+    messages = get_or_init_messages(f"{meta_directory}")
 
     new_messages: list[str] = messages.__getattribute__(message_type).append(
         message_text
