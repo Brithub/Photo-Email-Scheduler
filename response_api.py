@@ -25,7 +25,7 @@ def photo_taken(user, timezone) -> str:
 
     # check if the path exists, if it does, we're going to prompt the user to add a new message as they have already taken a photo today
     if os.path.exists(write_path):
-        new_message_type = random.choice(["response", "subject", "content"])
+        new_message_type = random.choice(["responses", "subjects", "contents"])
         return (
             f"You are already real. "
             f"Come up with a new message to use as a {new_message_type}!🇰🇷{new_message_type}"
