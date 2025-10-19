@@ -28,7 +28,7 @@ def photo_taken(user, timezone) -> str:
         new_message_type = random.choice(["responses", "subjects", "contents"])
         return (
             f"You are already real. "
-            f"Come up with a new message to use as a {new_message_type}!🇰🇷{new_message_type}"
+            f"Come up with a new message to use as {new_message_type}!🇰🇷{new_message_type}"
         )
 
     Path(write_path).mkdir(exist_ok=True, parents=True)
