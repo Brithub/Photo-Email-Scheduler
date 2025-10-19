@@ -23,19 +23,21 @@ class MessagesResponse:
     responses: list[str]
 
 
-def get_or_init_messages() -> MessagesResponse:
+def get_or_init_messages(path: str = "messages.yml") -> MessagesResponse:
 
     # initialization route
-    if not os.path.exists("messages.yml"):
-        messages = MessagesResponse(
-            subjects=["Subject 1", "Subject 2", "Subject 3"],
-            contents=["Content 1", "Content 2", "Content 3"],
-            responses=["Response 1", "Response 2", "Response 3"],
-        )
-        with open("messages.yml", "w") as f:
+    if not os.path.exists(path):
+        messages = {
+            "subjects": ["Subject 1", "Subject 2", "Subject 3"],
+            "contents": ["Content 1", "Content 2", "Content 3"],
+            "responses": ["Response 1", "Response 2", "Response 3"],
+        }
+
+        os.makedirs("/".join(path.split("/")[:-1]), exist_ok=True)
+        with open(path, "w") as f:
             yaml.dump(messages, f)
 
-    loaded_messages = yaml.safe_load(open("messages.yml"))
+    loaded_messages = yaml.safe_load(open(path))
     messages = MessagesResponse(
         subjects=loaded_messages["subjects"],
         contents=loaded_messages["contents"],

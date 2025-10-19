@@ -46,8 +46,11 @@ def photo_taken(user, timezone):
 
     # open messages.yaml file
     messages = yaml.safe_load(open(f"{current_path}/messages.yml"))
+    responses = messages.get("responses")
 
-    responses = messages.get("responses", ["That's Great!!! You did it!!"])
+    if responses is None:
+        print("No responses defined, defaulting.")
+        return ["That's Great!!! You did it!!"]
 
     # pick one response randomly
     return random.choice(responses)
