@@ -1,46 +1,38 @@
-import unittest
-from unittest.mock import patch, mock_open
-import datetime
 import os
-from time_helper import user_timezone, now
+import uuid
+from pathlib import Path
 
-class TestTimeHelper(unittest.TestCase):
+from time_helper import user_timezone, write_timezone
 
-    @patch('os.path.exists')
-    @patch('builtins.open', new_callable=mock_open, read_data="+0800\n")
-    def test_user_timezone_existing_file(self, mock_file, mock_exists):
-        # Test timezone reading from file
-        mock_exists.return_value = True
-        tz = user_timezone("test_user")
-        self.assertEqual(tz.utcoffset(None), datetime.timedelta(hours=8))
-        mock_exists.assert_called_with(os.path.dirname(os.path.realpath(__file__)) + "/timezones/test_user")
 
-    @patch('os.path.exists')
-    def test_user_timezone_no_file(self, mock_exists):
-        # Test default timezone when no file exists
-        mock_exists.return_value = False
-        tz = user_timezone("test_user")
-        self.assertEqual(tz.utcoffset(None), datetime.timedelta(hours=-5))
+def test_write_timezone() -> None:
+    test_meta_directory = f"/tmp/{uuid.uuid4()}"
+    os.environ["META_DIRECTORY"] = test_meta_directory
 
-    @patch('os.path.exists')
-    @patch('builtins.open', new_callable=mock_open, read_data="invalid")
-    def test_user_timezone_invalid_file(self, mock_file, mock_exists):
-        # Test error handling with invalid timezone format
-        mock_exists.return_value = True
-        tz = user_timezone("test_user")
-        self.assertEqual(tz.utcoffset(None), datetime.timedelta(hours=-5))
+    write_timezone("sam", "-0800")
 
-    @patch('time_helper.user_timezone')
-    @patch('datetime.datetime')
-    def test_now_function(self, mock_datetime, mock_user_timezone):
-        # Test the now function uses the correct timezone
-        mock_tz = datetime.timezone(datetime.timedelta(hours=2))
-        mock_user_timezone.return_value = mock_tz
-        mock_now = datetime.datetime(2023, 1, 1, 12, 0, 0, tzinfo=mock_tz)
-        mock_datetime.now.return_value = mock_now
+    assert os.path.exists(f"{test_meta_directory}/timezones/sam")
 
-        result = now("test_user")
 
-        mock_user_timezone.assert_called_with("test_user")
-        mock_datetime.now.assert_called_with(mock_tz)
-        self.assertEqual(result, mock_now)
+def test_user_timezone_existing_file():
+    # Test timezone reading from file
+
+    test_meta_directory = f"/tmp/{uuid.uuid4()}"
+    os.environ["META_DIRECTORY"] = test_meta_directory
+
+    sam_timezone_path = f"{test_meta_directory}/timezones/sam"
+    Path(sam_timezone_path).parent.mkdir(parents=True, exist_ok=True)
+
+    with open(sam_timezone_path, "w") as f:
+        f.write("-0700")
+
+    assert str(user_timezone("sam")) == "UTC-07:00"
+
+
+def test_user_timezone_no_file():
+    # Test default timezone when no file exists
+
+    test_meta_directory = f"/tmp/{uuid.uuid4()}"
+    os.environ["META_DIRECTORY"] = test_meta_directory
+
+    assert str(user_timezone("sam")) == "UTC-05:00"

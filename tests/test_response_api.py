@@ -1,102 +1,71 @@
-import unittest
-from unittest.mock import patch, mock_open, MagicMock, AsyncMock
-import yaml
 import os
-from fastapi.testclient import TestClient
-from response_api import app, photo_taken, add_text
+import uuid
+from pathlib import Path
+from unittest.mock import MagicMock
 
-class TestResponseApi(unittest.TestCase):
+import pytest
+from httpx import ASGITransport, AsyncClient, Response
 
-    def setUp(self):
-        self.client = TestClient(app)
+import response_api
+from response_api import photo_taken
 
-    @patch('os.makedirs')
-    @patch('builtins.open', new_callable=mock_open)
-    @patch('yaml.safe_load')
-    @patch('random.choice')
-    @patch('os.path.exists')
-    @patch('response_api.now')
-    def test_photo_taken_first_time(self, mock_now, mock_exists, mock_choice,
-                                    mock_yaml_load, mock_file, mock_makedirs):
-        # Test photo_taken endpoint for first photo of the day
-        mock_now.return_value = MagicMock(year=2023, month=1, day=1)
-        mock_exists.return_value = False
-        mock_yaml_load.return_value = {"response": ["Test response"]}
-        mock_choice.return_value = "Test response"
 
-        response = self.client.get("/photo_taken/testuser/+0000")
+def test_photo_taken_first_of_day():
+    # Test photo_taken endpoint for first photo of the day
 
-        self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.text, '"Test response"')
-        mock_makedirs.assert_called()
-        mock_file.assert_called()
+    test_meta_directory = f"/tmp/{uuid.uuid4()}"
+    os.environ["META_DIRECTORY"] = test_meta_directory
 
-    @patch('os.makedirs')
-    @patch('builtins.open', new_callable=mock_open)
-    @patch('yaml.safe_load')
-    @patch('random.choice')
-    @patch('os.path.exists')
-    @patch('response_api.now')
-    def test_photo_taken_already_taken(self, mock_now, mock_exists, mock_choice,
-                                       mock_yaml_load, mock_file, mock_makedirs):
-        # Test photo_taken when photo already taken today
-        mock_now.return_value = MagicMock(year=2023, month=1, day=1)
-        mock_exists.return_value = True
-        mock_choice.return_value = "subject"
+    response = photo_taken("sam", "+0000")
 
-        response = self.client.get("/photo_taken/testuser/+0000")
+    # it'll be using the default responses
+    assert response[:8] == "Response"
 
-        self.assertEqual(response.status_code, 200)
-        self.assertTrue("You are already real" in response.text)
-        self.assertTrue("subject" in response.text)
 
-    @patch('yaml.safe_load')
-    @patch('yaml.dump')
-    @patch('builtins.open', new_callable=mock_open)
-    async def test_add_text(self, mock_file, mock_yaml_dump, mock_yaml_load):
-        # Test adding text to existing message type
-        mock_yaml_load.return_value = {"content": ["Existing content"]}
+def test_photo_taken_already_taken(monkeypatch):
+    # Test photo_taken when photo already taken today
+    test_meta_directory = f"/tmp/{uuid.uuid4()}"
+    os.environ["META_DIRECTORY"] = test_meta_directory
 
-        mock_request = MagicMock()
-        mock_request.body = AsyncMock(return_value=b"New content")
+    mock_now = MagicMock()
+    mock_now.return_value = MagicMock(year=2023, month=1, day=1)
+    monkeypatch.setattr(response_api, "now", mock_now)
+    marker_path = test_meta_directory + "/markers/sam/2023/1/1/marker"
+    Path(marker_path).parent.mkdir(exist_ok=True, parents=True)
+    with open(marker_path, mode="w") as f:
+        f.write("Photo taken")
 
-        result = await add_text("content", mock_request)
+    response = photo_taken("sam", "+0000")
 
-        self.assertEqual(result, "Message added")
-        expected_data = {"content": ["Existing content", "New content"]}
-        mock_yaml_dump.assert_called_with(expected_data, mock_file())
+    # We use the korean flag as a delimiter for some reason
+    assert "🇰🇷" in response
 
-    @patch('yaml.safe_load')
-    @patch('yaml.dump')
-    @patch('builtins.open', new_callable=mock_open)
-    async def test_add_text_new_type(self, mock_file, mock_yaml_dump, mock_yaml_load):
-        # Test adding text for new message type
-        mock_yaml_load.return_value = {"content": ["Existing content"]}
 
-        mock_request = MagicMock()
-        mock_request.body = AsyncMock(return_value=b"New type content")
+@pytest.mark.anyio
+async def test_add_text():
+    test_meta_directory = f"/tmp/{uuid.uuid4()}"
+    os.environ["META_DIRECTORY"] = test_meta_directory
 
-        result = await add_text("new_type", mock_request)
+    base_url = "http://test"
+    app = response_api.app
+    async with AsyncClient(transport=ASGITransport(app), base_url=base_url) as ac:
+        response: Response = await ac.put(
+            "/add_text/responses", content="This is a new message"
+        )
 
-        self.assertEqual(result, "Message added")
-        expected_data = {
-            "content": ["Existing content"],
-            "new_type": ["New type content"]
-        }
-        mock_yaml_dump.assert_called_with(expected_data, mock_file())
+        assert response.text == '"Message added"'
 
-    @patch('yaml.safe_load')
-    @patch('yaml.dump')
-    @patch('builtins.open', new_callable=mock_open)
-    async def test_add_text_empty_messages(self, mock_file, mock_yaml_dump, mock_yaml_load):
-        # Test handling of empty messages file
-        mock_yaml_load.return_value = None
 
-        mock_request = MagicMock()
-        mock_request.body = AsyncMock(return_value=b"First content")
+@pytest.mark.anyio
+async def test_add_text_invalid_type():
+    test_meta_directory = f"/tmp/{uuid.uuid4()}"
+    os.environ["META_DIRECTORY"] = test_meta_directory
 
-        result = await add_text("content", mock_request)
+    base_url = "http://test"
+    app = response_api.app
+    async with AsyncClient(transport=ASGITransport(app), base_url=base_url) as ac:
+        response: Response = await ac.put(
+            "/add_text/other", content="This is a new message"
+        )
 
-        self.assertEqual(result, "Message added")
-        expected_data = {"content": ["First content"]}
-        mock_yaml_dump.assert_called_with(expected_data, mock_file())
+        assert response.text == '"Invalid message type"'

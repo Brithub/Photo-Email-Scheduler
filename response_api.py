@@ -1,32 +1,27 @@
+from email_sender import get_or_init_messages
 import os
 import random
+from pathlib import Path
 
 import yaml
 from fastapi import FastAPI, Request
 
-from time_helper import now
-
-current_path = os.path.abspath(os.path.dirname(__file__))
+from time_helper import now, write_timezone
 
 app = FastAPI()
 
 
 # to start, run fastapi run response_api.py
 @app.get("/photo_taken/{user}/{timezone}")
-def photo_taken(user, timezone):
+def photo_taken(user, timezone) -> str:
 
-    # Write a file to mark last timezone
-    timezone_path = f"{current_path}/timezones/{user}"
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    meta_directory = os.environ.get("META_DIRECTORY", current_path)
 
-    # Make sure the directory exists
-    print("making this path", f"{current_path}/timezones")
-    os.makedirs(f"{current_path}/timezones", exist_ok=True)
-
-    with open(timezone_path, "w") as f:
-        f.write(timezone)
+    write_timezone(user, timezone)
 
     today_date = f"{now(user).year}/{now(user).month}/{now(user).day}"
-    write_path = f"{current_path}/markers/{user}/{today_date}"
+    write_path = f"{meta_directory}/markers/{user}/{today_date}"
 
     # check if the path exists, if it does, we're going to prompt the user to add a new message as they have already taken a photo today
     if os.path.exists(write_path):
@@ -37,44 +32,40 @@ def photo_taken(user, timezone):
         )
 
     print("making this path", write_path)
-    # make the markers directories if they don't exist
-    os.makedirs(write_path, exist_ok=True)
+    Path(write_path).mkdir(exist_ok=True, parents=True)
 
     # write to new file even if it doesn't exist
     with open(write_path + "/marker", "w") as f:
         f.write("Photo taken")
 
     # open messages.yaml file
-    messages = yaml.safe_load(open(f"{current_path}/messages.yml"))
-    responses = messages.get("responses")
-
-    if responses is None:
-        print("No responses defined, defaulting.")
-        return ["That's Great!!! You did it!!"]
+    messages = get_or_init_messages(f"{meta_directory}/messages.py")
 
     # pick one response randomly
-    return random.choice(responses)
+    return random.choice(messages.responses)
 
 
 @app.put("/add_text/{message_type}")
-async def add_text(message_type: str, request: Request):
+async def add_text(message_type: str, request: Request) -> str:
     # Read the body of the request
     message_text = await request.body()
     message_text = message_text.decode()
 
-    message_path = f"{current_path}/messages.yml"
+    if message_type not in ["responses", "subjects", "contents"]:
+        return "Invalid message type"
 
-    with open(message_path, "r") as file:
-        messages = yaml.safe_load(file) or {}  # Handle case where file is empty
+    current_path = os.path.abspath(os.path.dirname(__file__))
+    meta_directory = os.environ.get("META_DIRECTORY", current_path)
 
-    # append the text to the message type and write it back to the file
-    if message_type not in messages:
-        messages[message_type] = [message_text]
-    else:
-        messages[message_type].append(message_text)
+    messages = get_or_init_messages(f"{meta_directory}/messages.yml")
+
+    new_messages: list[str] = messages.__getattribute__(message_type).append(
+        message_text
+    )
+    messages.__setattr__(message_type, new_messages)
 
     # write the new messages to the file
-    with open(message_path, "w") as file:
+    with open(f"{meta_directory}/messages.yml", "w") as file:
         yaml.dump(messages, file)
 
     return "Message added"

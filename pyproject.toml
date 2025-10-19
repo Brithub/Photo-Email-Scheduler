@@ -9,7 +9,18 @@ dependencies = [
     "pyyaml"
 ]
 
+[tool.pyrefly]
+project-includes = ["**/*"]
+project-excludes = [
+    "**/node_modules",
+    "**/__pycache__",
+    "**/*venv/**/*",
+]
+
 [dependency-groups]
 dev = [
     "pytest",
+    "anyio[trio]"
 ]
+
+[tool]
