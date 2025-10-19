@@ -4,6 +4,7 @@ import random
 import smtplib, ssl
 import time
 from dataclasses import dataclass
+from pathlib import Path
 
 import yaml
 
@@ -33,7 +34,8 @@ def get_or_init_messages(path: str = "messages.yml") -> MessagesResponse:
             "responses": ["Response 1", "Response 2", "Response 3"],
         }
 
-        os.makedirs("/".join(path.split("/")[:-1]), exist_ok=True)
+        output_file = Path(path)
+        output_file.parent.mkdir(exist_ok=True, parents=True)
         with open(path, "w") as f:
             yaml.dump(messages, f)
 
@@ -48,7 +50,6 @@ def get_or_init_messages(path: str = "messages.yml") -> MessagesResponse:
 
 
 def send_message(email):
-    port = 587  # For starttls
     smtp_server = "smtp.gmail.com"
     sender_email = "sammie.b.automation@gmail.com"
 
@@ -72,7 +73,7 @@ def send_message(email):
 
     print("emailing " + email)
     context = ssl.create_default_context()
-    with smtplib.SMTP(smtp_server, port) as server:
+    with smtplib.SMTP(smtp_server, port=587) as server:
         server.ehlo()
         server.starttls(context=context)
         server.login(sender_email, password)

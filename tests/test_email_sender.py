@@ -1,9 +1,10 @@
 import os
 import uuid
-from unittest.mock import patch, MagicMock
+from unittest.mock import MagicMock
 
 import yaml
 
+import email_sender
 from email_sender import (
     send_message,
     get_or_init_messages,
@@ -29,13 +30,16 @@ def test_get_or_init_messages():
     assert len(messages.subjects) == 4
 
 
-@patch("smtplib.SMTP")
-def test_send_message(mock_smtp):
+def test_send_message(monkeypatch):
     # Test sending an email
     os.environ["GMAIL_AUTOMATION_PASSWORD"] = "test_password"
 
     mock_server = MagicMock()
+    mock_smtp = MagicMock()
+    mock_smtplib = MagicMock()
+    mock_smtplib.SMTP = mock_smtp
     mock_smtp.return_value.__enter__.return_value = mock_server
+    monkeypatch.setattr(email_sender, "smtplib", mock_smtplib)
 
     send_message("test@example.com")
 
