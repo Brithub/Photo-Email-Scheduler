@@ -56,10 +56,10 @@ async def add_text(message_type: str, request: Request) -> str:
 
     messages = get_or_init_messages(f"{meta_directory}")
 
-    new_messages: list[str] = messages.__getattribute__(message_type).append(
-        message_text
-    )
-    messages.__setattr__(message_type, new_messages)
+    old_messages = messages.__getattribute__(message_type)
+    old_messages.append(message_text)
+
+    messages.__setattr__(message_type, old_messages)
 
     # write the new messages to the file
     with open(f"{meta_directory}/messages.yml", "w") as file:
