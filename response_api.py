@@ -1,3 +1,5 @@
+from dataclasses import asdict
+
 from email_sender import get_or_init_messages
 import os
 import random
@@ -63,6 +65,6 @@ async def add_text(message_type: str, request: Request) -> str:
 
     # write the new messages to the file
     with open(f"{meta_directory}/messages.yml", "w") as file:
-        yaml.dump(messages, file)
+        yaml.dump(asdict(messages), file)
 
     return "Message added"
