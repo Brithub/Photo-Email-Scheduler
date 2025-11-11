@@ -81,31 +81,35 @@ def send_message(email):
         print("email sent")
 
 
-def pick_time(user="sam"):
+def pick_time(user: str):
     # Get current time with the specified timezone
     now_user = now(user)
     day_of_week = now_user.weekday()
 
-    # get the start and end possible times
-    if day_of_week < 5:
-        # weekdays
-        # 10% chance of having a 9am starting time
-        if random.random() > 0.9:
-            start_time = datetime.time(9, 0)
-        else:
-            start_time = datetime.time(17, 0)
-        end_time = datetime.time(22, 0)
-    else:
-        # weekends
-        start_time = datetime.time(10, 0)
-        end_time = datetime.time(22, 0)
+    # Default shouldn't ever be used, but ide highlighting didn't like it only existing in the match statement
+    start_hour: int = 10
+    match day_of_week:
+        case 0:  # Mondays
+            start_hour: int = 15  # 3pm
+        case 1:  # Tuesdays
+            start_hour: int = 10  # 10am
+        case 2:  # Wednesdays
+            start_hour: int = 10  # 10am
+        case 3:  # Thursdays
+            start_hour: int = 15  # 3pm
+        case 4:  # Fridays
+            start_hour: int = 15  # 3pm
+        case 5:  # Saturdays
+            start_hour: int = 10  # 10am
+        case _:  # Sundays
+            start_hour: int = 10  # 10am
 
     # pick a random time between start and end
     alert_timestamp = datetime.datetime(
         day=now_user.day,
         month=now_user.month,
         year=now_user.year,
-        hour=random.randint(start_time.hour, end_time.hour),
+        hour=random.randint(start_hour, 21), # end limit is 9:59, I'm trying to get some sleep!
         minute=random.randint(0, 59),
         second=0,
         microsecond=0,
