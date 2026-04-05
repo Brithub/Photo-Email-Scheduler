@@ -1,3 +1,4 @@
 *.idea
 schedules/*
 /messages.yml
+lunch_numbers.yml

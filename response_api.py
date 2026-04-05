@@ -68,3 +68,47 @@ async def add_text(message_type: str, request: Request) -> str:
         yaml.dump(asdict(messages), file)
 
     return "Message added"
+
+
+@app.post("/lunch_numbers/{number}")
+async def lunch_number(number: int, request: Request) -> str:
+    current_path = os.path.abspath(os.path.dirname(__file__))
+
+    try:
+        number = int(number)
+    except ValueError:
+        return "Invalid number"
+
+    if number < 0 or number > 999:
+        return "Invalid number"
+
+    file_exists = os.path.exists(f"{current_path}/lunch_numbers.yml")
+    if not file_exists:
+        previous_data = {}
+    else:
+        previous_data = yaml.safe_load(open(f"{current_path}/lunch_numbers.yml"))
+
+    current_total = len(previous_data.keys())
+
+    message = ""
+
+    if number / 10 == 67 or number % 100 == 67:
+        message += "(six seven haha) "
+
+    if number not in previous_data:
+        # first time!
+        previous_data[number] = 1
+
+        # TODO figure out if there's a 000
+        percentage = ((current_total + 1) * 1.0) / 1000
+
+        message += f"New number! We're {100 * percentage:.1f}% of the way there!"
+
+    else:
+        message += f"We've already got {previous_data[number]} {number}s... We'll get em next time"
+        previous_data[number] += 1
+
+    with open(f"{current_path}/lunch_numbers.yml", "w") as file:
+        yaml.dump(previous_data, file)
+
+    return message
