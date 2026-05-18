@@ -99,13 +99,29 @@ async def lunch_number(number: int, request: Request) -> str:
         # first time!
         previous_data[number] = 1
 
-        # TODO figure out if there's a 000
-        percentage = ((current_total + 1) * 1.0) / 1000
+        percentage = ((current_total + 1) * 1.0) / 10
 
-        message += f"New number! We're {100 * percentage:.1f}% of the way there!"
+        message += f"New number! We're {percentage:.1f}% of the way there!"
 
     else:
-        message += f"We've already got {previous_data[number]} {number}s... We'll get em next time"
+        count = previous_data[number]
+        percentage = (current_total * 1.0) / 10
+
+        if 11 <= (number % 100) <= 13:
+            suffix = "th"
+        else:
+            suffix = {1: "st", 2: "nd", 3: "rd"}.get(number % 10, "th")
+
+        message_options = [
+            f"I'm so sorry, we've already got {count} {number}s",
+            f"We've already got {count} {number}s... We'll get em next time",
+            f"That's the {count}{suffix} time we've got {number} :(",
+            f"We already have {number}...",
+            f"So we've already got {number}, but we gotta try",
+            f"I'm afraid {number} isn't it, we're still at {percentage:.1f}% for now",
+        ]
+
+        message += random.choice(message_options)
         previous_data[number] += 1
 
     with open(f"{current_path}/lunch_numbers.yml", "w") as file:
