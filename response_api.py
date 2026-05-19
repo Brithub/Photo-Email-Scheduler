@@ -1,9 +1,8 @@
 from dataclasses import asdict
 
-from email_sender import get_or_init_messages
+from email_sender import get_or_init_messages, is_user_late, generate_new_schedule
 import os
 import random
-from pathlib import Path
 
 import yaml
 from fastapi import FastAPI, Request
@@ -17,31 +16,30 @@ app = FastAPI()
 @app.get("/photo_taken/{user}/{timezone}")
 def photo_taken(user, timezone) -> str:
 
+    print(f"Message from {user}")
+
     current_path = os.path.abspath(os.path.dirname(__file__))
     meta_directory = os.environ.get("META_DIRECTORY", current_path)
 
     write_timezone(user, timezone)
 
-    today_date = f"{now(user).year}/{now(user).month}/{now(user).day}"
-    write_path = f"{meta_directory}/markers/{user}/{today_date}"
-
-    # check if the path exists, if it does, we're going to prompt the user to add a new message as they have already taken a photo today
-    if os.path.exists(write_path):
+    if not is_user_late(user):
         new_message_type = random.choice(["responses", "subjects", "contents"])
         return (
             f"You are already real. "
             f"Come up with a new message to use as {new_message_type}!🇰🇷{new_message_type}"
         )
 
-    Path(write_path).mkdir(exist_ok=True, parents=True)
-    with open(write_path + "/marker", "w") as f:
-        f.write("Photo taken")
+    else:
 
-    # open messages.yaml file
-    messages = get_or_init_messages(meta_directory)
+        # Generate a new schedule
+        generate_new_schedule(user)
 
-    # pick one response randomly
-    return random.choice(messages.responses)
+        # open messages.yaml file
+        messages = get_or_init_messages(meta_directory)
+
+        # pick one response randomly
+        return random.choice(messages.responses)
 
 
 @app.put("/add_text/{message_type}")

@@ -1,10 +1,12 @@
 import datetime
+
 import os
 import random
 import smtplib, ssl
 import time
 from dataclasses import dataclass
 from pathlib import Path
+import pickle
 
 import yaml
 
@@ -12,9 +14,13 @@ from email.mime.text import MIMEText
 
 from time_helper import user_timezone, now
 
-user_map = {"sam": "sam@britton.email", "katie": "luovakatie@gmail.com"}
+user_map = {
+    "sam": "sam@britton.email",
+    # "katie": "luovakatie@gmail.com"
+}
 
 current_path = os.path.dirname(os.path.realpath(__file__))
+UTC = datetime.timezone.utc
 
 
 @dataclass
@@ -81,13 +87,11 @@ def send_message(email):
         print("email sent")
 
 
-def pick_time(user: str):
+def pick_time(user: str, snooze_days: int = 1) -> datetime.datetime:
     # Get current time with the specified timezone
     now_user = now(user)
     day_of_week = now_user.weekday()
 
-    # Default shouldn't ever be used, but ide highlighting didn't like it only existing in the match statement
-    start_hour: int = 10
     match day_of_week:
         case 0:  # Mondays
             start_hour: int = 15  # 3pm
@@ -109,54 +113,65 @@ def pick_time(user: str):
         day=now_user.day,
         month=now_user.month,
         year=now_user.year,
-        hour=random.randint(start_hour, 21), # end limit is 9:59, I'm trying to get some sleep!
+        hour=random.randint(
+            start_hour, 20
+        ),  # end limit is 8:59, I'm trying to get some sleep!
         minute=random.randint(0, 59),
         second=0,
         microsecond=0,
         tzinfo=user_timezone(user),
     )
+
+    alert_timestamp = alert_timestamp + datetime.timedelta(days=snooze_days)
+
     return alert_timestamp
+
+
+def generate_new_schedule(user: str) -> None:
+
+    # This should be in the user dict but that's for later
+    if user == "katie":
+        old_deadline = get_current_deadline(user)
+        time_latent = old_deadline - datetime.datetime.now(UTC)
+        minutes_late = time_latent.total_seconds() / 60
+
+        # Depending on how early be real, the longer break before it's time to be real again
+        snooze_days = min(5 - int(minutes_late / 30), 1)
+    else:
+        snooze_days = 1
+
+    new_deadline = pick_time(user, snooze_days)
+
+    pretty_new_time = new_deadline.strftime("%Y-%m-%d %H:%M:%S")
+    print(f"Next time {user} has to be real is {pretty_new_time}")
+
+    schedule_path = Path(f"{current_path}/schedules/{user}/schedule.pickle")
+    with open(schedule_path, "wb") as file:
+        pickle.dump(new_deadline, file)
+
+
+def get_current_deadline(user: str) -> datetime.datetime:
+    schedule_path = Path(f"{current_path}/schedules/{user}/schedule.pickle")
+    try:
+        with open(schedule_path, "rb") as f:
+            deadline = pickle.load(f)
+    except Exception:
+        print("No available schedules, starting now")
+        deadline = datetime.datetime(year=2000, month=1, day=1, tzinfo=UTC)
+    return deadline
+
+
+def is_user_late(user: str) -> bool:
+
+    deadline = get_current_deadline(user)
+    # now if we're at or past the time to send the message
+    return datetime.datetime.now(UTC) >= deadline
 
 
 def schedule_message():
     while True:
         for user in user_map.keys():
-            year = now(user).year
-            month = now(user).month
-            day = now(user).day
-            # if there's no scheduled message for today for the user, decide that schedule
-            if not os.path.exists(
-                f"{current_path}/schedules/{user}/{year}/{month}/{day}"
-            ):
-                alert_time = pick_time(user)
-                alert_time_string = alert_time.strftime("%H:%M")
-
-                # make the schedules directory if it doesn't exist
-                os.makedirs(
-                    f"{current_path}/schedules/{user}/{year}/{month}/{day}",
-                    exist_ok=True,
-                )
-
-                # write the scheduled message to the file
-                schedules_path = f"{current_path}/schedules/{user}/{year}/{month}/{day}/{alert_time_string}"
-                with open(schedules_path, "w") as f:
-                    f.write(alert_time.isoformat())
-            else:
-                # list the files in the schedules dir under the user and today's date
-                date_dir = f"{current_path}/schedules/{user}/{year}/{month}/{day}"
-                files = os.listdir(date_dir)
-                # get the alert time from the file path
-                timestamp_file = open(date_dir + "/" + files[0]).read()
-                alert_time = datetime.datetime.fromisoformat(timestamp_file)
-
-            # now if we're at or past the time to send the message
-            if now(user) >= alert_time:
-                # check if the message has already been sent
-                if os.path.exists(
-                    f"{current_path}/markers/{user}/{year}/{month}/{day}"
-                ):
-                    continue
-
+            if is_user_late(user):
                 # send the message
                 send_message(user_map[user])
 
