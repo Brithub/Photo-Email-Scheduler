@@ -16,7 +16,7 @@ from time_helper import user_timezone, now
 
 user_map = {
     "sam": "sam@britton.email",
-    # "katie": "luovakatie@gmail.com"
+    "katie": "luovakatie@gmail.com"
 }
 
 current_path = os.path.dirname(os.path.realpath(__file__))
