@@ -131,9 +131,10 @@ def generate_new_schedule(user: str) -> None:
         old_deadline = get_current_deadline(user)
         time_latent = old_deadline - datetime.datetime.now(UTC)
         minutes_late = time_latent.total_seconds() / 60
-
+        print(f"Late {minutes_late} minutes late")
         # Depending on how early be real, the longer break before it's time to be real again
         snooze_days = max(5 - int(minutes_late / 30), 1)
+        print(f"Snooze {snooze_days=}")
     else:
         snooze_days = 1
 
