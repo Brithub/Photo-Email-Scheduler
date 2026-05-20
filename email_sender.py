@@ -14,10 +14,7 @@ from email.mime.text import MIMEText
 
 from time_helper import user_timezone, now
 
-user_map = {
-    "sam": "sam@britton.email",
-    "katie": "luovakatie@gmail.com"
-}
+user_map = {"sam": "sam@britton.email", "katie": "luovakatie@gmail.com"}
 
 current_path = os.path.dirname(os.path.realpath(__file__))
 UTC = datetime.timezone.utc
@@ -136,7 +133,7 @@ def generate_new_schedule(user: str) -> None:
         minutes_late = time_latent.total_seconds() / 60
 
         # Depending on how early be real, the longer break before it's time to be real again
-        snooze_days = min(5 - int(minutes_late / 30), 1)
+        snooze_days = max(5 - int(minutes_late / 30), 1)
     else:
         snooze_days = 1
 
