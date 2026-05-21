@@ -86,7 +86,7 @@ def send_message(email):
 
 def pick_time(user: str, snooze_days: int = 1) -> datetime.datetime:
     # Get current time with the specified timezone
-    now_user = now(user)
+    now_user = now(user) + datetime.timedelta(days=snooze_days)
     day_of_week = now_user.weekday()
 
     match day_of_week:
@@ -118,8 +118,6 @@ def pick_time(user: str, snooze_days: int = 1) -> datetime.datetime:
         microsecond=0,
         tzinfo=user_timezone(user),
     )
-
-    alert_timestamp = alert_timestamp + datetime.timedelta(days=snooze_days)
 
     return alert_timestamp
 
