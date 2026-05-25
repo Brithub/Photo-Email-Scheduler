@@ -164,6 +164,12 @@ def is_user_late(user: str) -> bool:
     return datetime.datetime.now(UTC) >= deadline
 
 
+def is_user_early(user: str) -> bool:
+    # Early's not a bad thing, this allows us to be real for the day before the deadline even gets here
+    deadline = get_current_deadline(user)
+    return now(user).day == deadline.day
+
+
 def schedule_message():
     while True:
         for user in user_map.keys():

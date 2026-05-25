@@ -1,6 +1,11 @@
 from dataclasses import asdict
 
-from email_sender import get_or_init_messages, is_user_late, generate_new_schedule
+from email_sender import (
+    get_or_init_messages,
+    is_user_late,
+    generate_new_schedule,
+    is_user_early,
+)
 import os
 import random
 
@@ -23,15 +28,7 @@ def photo_taken(user, timezone) -> str:
 
     write_timezone(user, timezone)
 
-    if not is_user_late(user):
-        new_message_type = random.choice(["responses", "subjects", "contents"])
-        return (
-            f"You are already real. "
-            f"Come up with a new message to use as {new_message_type}!🇰🇷{new_message_type}"
-        )
-
-    else:
-
+    if is_user_late(user) or is_user_early(user):
         # Generate a new schedule
         generate_new_schedule(user)
 
@@ -40,6 +37,14 @@ def photo_taken(user, timezone) -> str:
 
         # pick one response randomly
         return random.choice(messages.responses)
+
+    else:
+
+        new_message_type = random.choice(["responses", "subjects", "contents"])
+        return (
+            f"You are already real. "
+            f"Come up with a new message to use as {new_message_type}!🇰🇷{new_message_type}"
+        )
 
 
 @app.put("/add_text/{message_type}")
