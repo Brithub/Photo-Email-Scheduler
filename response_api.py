@@ -110,18 +110,21 @@ async def lunch_number(number: int, request: Request) -> str:
         count = previous_data[number]
         percentage = (current_total * 1.0) / 10
 
-        if 11 <= (number % 100) <= 13:
+        new_count = number + 1
+        if 11 <= (new_count % 100) <= 13:
             suffix = "th"
         else:
-            suffix = {1: "st", 2: "nd", 3: "rd"}.get(number % 10, "th")
+            suffix = {1: "st", 2: "nd", 3: "rd"}.get(new_count % 10, "th")
 
         message_options = [
             f"I'm so sorry, we've already got {count} {number}s",
             f"We've already got {count} {number}s... We'll get em next time",
-            f"That's the {count}{suffix} time we've got {number} :(",
+            f"That's the {new_count}{suffix} time we've got {number} :(",
             f"We already have {number}...",
             f"So we've already got {number}, but we gotta try",
             f"I'm afraid {number} isn't it, we're still at {percentage:.1f}% for now",
+            f"That's the {new_count}{suffix} time, we've seen {number}, but thank you for trying",
+            f"{number} is already taken, next time try and get one of the {1000-current_total} remaining numbers 🙇",
         ]
 
         message += random.choice(message_options)
