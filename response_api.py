@@ -104,7 +104,15 @@ async def lunch_number(number: int, request: Request) -> str:
 
         percentage = ((current_total + 1) * 1.0) / 10
 
-        message += f"New number! We're {percentage:.1f}% of the way there!"
+        message_options = [
+            f"New number! We're {percentage:.1f}% of the way there!",
+            f"Let's go!!!! First time for {number}! {percentage:.1f}% of the way there!",
+            f"New number new number! Only {1000-current_total} remaining!",
+            f"Yeah, that's a new number 😎. Only {1000-current_total} left to go!",
+            f"We've never seen {number} before!!!! {percentage:.1f}% remain"
+        ]
+
+        message += random.choice(message_options)
 
     else:
         count = previous_data[number]
