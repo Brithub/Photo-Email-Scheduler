@@ -110,7 +110,7 @@ async def lunch_number(number: int, request: Request) -> str:
         count = previous_data[number]
         percentage = (current_total * 1.0) / 10
 
-        new_count = number + 1
+        new_count = count + 1
         if 11 <= (new_count % 100) <= 13:
             suffix = "th"
         else:
