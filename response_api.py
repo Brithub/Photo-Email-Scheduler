@@ -93,10 +93,7 @@ async def lunch_number(number: int, request: Request) -> str:
 
     current_total = len(previous_data.keys())
 
-    message = ""
-
-    if number / 10 == 67 or number % 100 == 67:
-        message += "(six seven haha) "
+    message = "(six seven haha) " if "67" in str(number) else ""
 
     if number not in previous_data:
         # first time!
@@ -109,7 +106,7 @@ async def lunch_number(number: int, request: Request) -> str:
             f"Let's go!!!! First time for {number}! {percentage:.1f}% of the way there!",
             f"New number new number! Only {1000-current_total} remaining!",
             f"Yeah, that's a new number 😎. Only {1000-current_total} left to go!",
-            f"We've never seen {number} before!!!! {percentage:.1f}% remain"
+            f"We've never seen {number} before!!!! We're now at {percentage:.1f}%!!!",
         ]
 
         message += random.choice(message_options)
