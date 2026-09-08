@@ -76,12 +76,24 @@ def send_message(email):
 
     print("emailing " + email)
     context = ssl.create_default_context()
-    with smtplib.SMTP(smtp_server, port=587) as server:
-        server.ehlo()
-        server.starttls(context=context)
-        server.login(sender_email, password)
-        server.sendmail(sender_email, email, msg.as_string())
-        print("email sent")
+
+    retries_remaining: int = 5
+    message_sent = False
+
+    while retries_remaining > 0 and not message_sent:
+        try:
+            with smtplib.SMTP(smtp_server, port=587) as server:
+                server.ehlo()
+                server.starttls(context=context)
+                server.login(sender_email, password)
+                server.sendmail(sender_email, email, msg.as_string())
+                print("email sent")
+                message_sent = True
+        except smtplib.SMTPException:
+            delay = (6 - retries_remaining) * 60
+            retries_remaining -= 1
+            print(f"failed to send email, retrying in {delay} seconds")
+            time.sleep(delay)
 
 
 def pick_time(user: str, snooze_days: int = 1) -> datetime.datetime:
