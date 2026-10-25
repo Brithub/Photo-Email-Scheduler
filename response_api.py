@@ -4,7 +4,7 @@ from email_sender import (
     get_or_init_messages,
     is_user_late,
     generate_new_schedule,
-    is_user_early,
+    is_user_early, get_current_deadline,
 )
 import os
 import random
@@ -45,6 +45,11 @@ def photo_taken(user, timezone) -> str:
             f"You are already real. "
             f"Come up with a new message to use as {new_message_type}!🇰🇷{new_message_type}"
         )
+
+@app.get(path="next_scheduled_photo/{user}")
+def next_scheduled_photo(user) -> str:
+    # If we want to be able to do more native notifications for alerts, we need to expose the data
+    return str(get_current_deadline(user))
 
 
 @app.put("/add_text/{message_type}")
