@@ -46,7 +46,7 @@ def photo_taken(user, timezone) -> str:
             f"Come up with a new message to use as {new_message_type}!🇰🇷{new_message_type}"
         )
 
-@app.get(path="next_scheduled_photo/{user}")
+@app.get(path="/next_scheduled_photo/{user}")
 def next_scheduled_photo(user) -> str:
     # If we want to be able to do more native notifications for alerts, we need to expose the data
     return str(get_current_deadline(user))
