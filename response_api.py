@@ -63,7 +63,8 @@ async def add_text(message_type: str, request: Request) -> str:
 
 @app.get("/messages/{message_type}")
 def get_messages(message_type: str) -> str:
-    return getattr(read_saved_messages, message_type.lower())
+    some_messages = getattr(read_saved_messages(), message_type.lower())
+    return "\n".join(some_messages)
 
 @app.post("/lunch_numbers/{number}")
 async def lunch_number(number: int, request: Request) -> str:

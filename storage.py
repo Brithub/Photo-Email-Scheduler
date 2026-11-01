@@ -37,10 +37,13 @@ def write_message(message_text: str, message_type: str) -> None:
 
     all_messages = read_saved_messages()
 
+    some_messages = getattr(all_messages, message_type) or []
+    some_messages.append(message_text)
+
     setattr(
         all_messages,
         message_type,
-        getattr(all_messages, message_type).append(message_text),
+        some_messages
     )
 
     # write the new messages to the file
