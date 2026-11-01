@@ -1,18 +1,18 @@
-from storage import MessagesResponse, write_message, read_saved_messages
-from dataclasses import asdict, fields
+import os
+import random
+import re
+from dataclasses import fields
+
+import yaml
+from fastapi import FastAPI, Request
 
 from email_sender import (
     is_user_late,
     generate_new_schedule,
     is_user_early, get_current_deadline,
 )
-import os
-import random
-import re
-import yaml
-from fastapi import FastAPI, Request
-
-from time_helper import now, write_timezone
+from storage import MessagesResponse, write_message, read_saved_messages
+from time_helper import write_timezone
 
 app = FastAPI()
 
@@ -63,8 +63,7 @@ async def add_text(message_type: str, request: Request) -> str:
 
 @app.get("/messages/{message_type}")
 def get_messages(message_type: str) -> str:
-    sanitized: str = re.sub(pattern="^[a-zA-Z]", repl="", string=message_type).lower()
-    return getattr(read_saved_messages, sanitized)
+    return getattr(read_saved_messages, message_type.lower())
 
 @app.post("/lunch_numbers/{number}")
 async def lunch_number(number: int, request: Request) -> str:
