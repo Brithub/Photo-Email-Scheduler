@@ -1,14 +1,14 @@
-from dataclasses import asdict
+from storage import MessagesResponse, write_message, read_saved_messages
+from dataclasses import asdict, fields
 
 from email_sender import (
-    get_or_init_messages,
     is_user_late,
     generate_new_schedule,
     is_user_early, get_current_deadline,
 )
 import os
 import random
-
+import re
 import yaml
 from fastapi import FastAPI, Request
 
@@ -23,9 +23,6 @@ def photo_taken(user, timezone) -> str:
 
     print(f"Message from {user}")
 
-    current_path = os.path.abspath(os.path.dirname(__file__))
-    meta_directory = os.environ.get("META_DIRECTORY", current_path)
-
     write_timezone(user, timezone)
 
     if is_user_late(user) or is_user_early(user):
@@ -33,14 +30,14 @@ def photo_taken(user, timezone) -> str:
         generate_new_schedule(user)
 
         # open messages.yaml file
-        messages = get_or_init_messages(meta_directory)
+        messages = read_saved_messages()
 
         # pick one response randomly
         return random.choice(messages.responses)
 
     else:
 
-        new_message_type = random.choice(["responses", "subjects", "contents"])
+        new_message_type = random.choice(["responses", "subjects", "contents", "statuses"])
         return (
             f"You are already real. "
             f"Come up with a new message to use as {new_message_type}!🇰🇷{new_message_type}"
@@ -58,25 +55,16 @@ async def add_text(message_type: str, request: Request) -> str:
     message_text = await request.body()
     message_text = message_text.decode()
 
-    if message_type not in ["responses", "subjects", "contents"]:
+    if message_type not in [f.name for f in fields(MessagesResponse)]:
         return "Invalid message type"
 
-    current_path = os.path.abspath(os.path.dirname(__file__))
-    meta_directory = os.environ.get("META_DIRECTORY", current_path)
-
-    messages = get_or_init_messages(f"{meta_directory}")
-
-    old_messages = messages.__getattribute__(message_type)
-    old_messages.append(message_text)
-
-    messages.__setattr__(message_type, old_messages)
-
-    # write the new messages to the file
-    with open(f"{meta_directory}/messages.yml", "w") as file:
-        yaml.dump(asdict(messages), file)
-
+    write_message(message_type=message_type, message_text=message_text)
     return "Message added"
 
+@app.get("/messages/{message_type}")
+def get_messages(message_type: str) -> str:
+    sanitized: str = re.sub(pattern="^[a-zA-Z]", repl="", string=message_type).lower()
+    return getattr(read_saved_messages, sanitized)
 
 @app.post("/lunch_numbers/{number}")
 async def lunch_number(number: int, request: Request) -> str:

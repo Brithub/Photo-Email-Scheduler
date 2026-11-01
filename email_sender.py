@@ -1,56 +1,26 @@
 import datetime
-
 import os
-import random
-import smtplib, ssl
-import time
-from dataclasses import dataclass
-from pathlib import Path
 import pickle
-
-import yaml
-
+import random
+import smtplib
+import ssl
+import time
+import uuid
 from email.mime.text import MIMEText
+from pathlib import Path
 
+from storage import MessagesResponse, read_saved_messages
 from time_helper import user_timezone, now
 
 user_map = {"sam": "sam@britton.email", "katie": "luovakatie@gmail.com"}
 
-current_path = os.path.dirname(os.path.realpath(__file__))
 UTC = datetime.timezone.utc
 
+meta_path = os.getenv("META_DIRECTORY")
 
-@dataclass
-class MessagesResponse:
-    subjects: list[str]
-    contents: list[str]
-    responses: list[str]
-
-
-def get_or_init_messages(path: str = current_path) -> MessagesResponse:
-
-    messages_path = path + "/messages.yml"
-    # initialization route
-    if not os.path.exists(messages_path):
-        messages = {
-            "subjects": ["Subject 1", "Subject 2", "Subject 3"],
-            "contents": ["Content 1", "Content 2", "Content 3"],
-            "responses": ["Response 1", "Response 2", "Response 3"],
-        }
-
-        Path(messages_path).parent.mkdir(exist_ok=True, parents=True)
-        with open(messages_path, "w") as f:
-            yaml.dump(messages, f)
-
-    loaded_messages = yaml.safe_load(open(messages_path))
-    messages = MessagesResponse(
-        subjects=loaded_messages["subjects"],
-        contents=loaded_messages["contents"],
-        responses=loaded_messages["responses"],
-    )
-
-    return messages
-
+if not meta_path:
+    print("No meta directory available, writing to tmp")
+    meta_path = f"/tmp/{uuid.uuid4()}"
 
 def send_message(email):
     smtp_server = "smtp.gmail.com"
@@ -64,7 +34,7 @@ def send_message(email):
     text_subtype = "plain"
 
     # select a random message from messages.yml
-    all_messages: MessagesResponse = get_or_init_messages()
+    all_messages: MessagesResponse = read_saved_messages()
 
     random.seed(int(now().strftime("%Y%m%d")))
     subject = random.choice(all_messages.subjects)
@@ -153,13 +123,13 @@ def generate_new_schedule(user: str) -> None:
     pretty_new_time = new_deadline.strftime("%Y-%m-%d %H:%M:%S")
     print(f"Next time {user} has to be real is {pretty_new_time}")
 
-    schedule_path = Path(f"{current_path}/schedules/{user}/schedule.pickle")
+    schedule_path = Path(f"{meta_path}/schedules/{user}/schedule.pickle")
     with open(schedule_path, "wb") as file:
         pickle.dump(new_deadline, file)
 
 
 def get_current_deadline(user: str) -> datetime.datetime:
-    schedule_path = Path(f"{current_path}/schedules/{user}/schedule.pickle")
+    schedule_path = Path(f"{meta_path}/schedules/{user}/schedule.pickle")
     try:
         with open(schedule_path, "rb") as f:
             deadline = pickle.load(f)

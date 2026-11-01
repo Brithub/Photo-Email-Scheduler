@@ -7,15 +7,18 @@ import yaml
 import email_sender
 from email_sender import (
     send_message,
-    get_or_init_messages,
+    read_saved_messages,
 )
 
 
-def test_get_or_init_messages():
-    messages_path = f"/tmp/{uuid.uuid4()}"
-    messages = get_or_init_messages(messages_path)
+def test_read_saved_messages(monkeypatch):
 
-    assert len(messages.subjects) == 3
+    messages_path = f"/tmp/{uuid.uuid4()}"
+
+    monkeypatch.setenv("META_DIRECTORY", messages_path)
+    messages = read_saved_messages()
+
+    assert messages
 
     existing_data = {
         "subjects": ["Subject 1", "Subject 2", "Subject 3", "Subject 4"],
@@ -26,8 +29,9 @@ def test_get_or_init_messages():
     with open(messages_path + "/messages.yml", "w") as yaml_file:
         yaml.dump(existing_data, yaml_file, default_flow_style=False)
 
-    messages = get_or_init_messages(messages_path)
+    messages = read_saved_messages()
     assert len(messages.subjects) == 4
+    assert messages.statuses == []
 
 
 def test_send_message(monkeypatch):
